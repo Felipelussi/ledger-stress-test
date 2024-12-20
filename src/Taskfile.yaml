@@ -1,0 +1,29 @@
+version: '3'
+
+tasks:
+  setup:
+    desc: "Set up the ledger environment with Docker Compose"
+    cmds:
+      - docker-compose up -d
+    silent: false
+
+  run-test:
+    desc: "Run the stress test script using Node.js"
+    deps:
+      - setup
+    cmds:
+      - node stress-test.js
+    silent: false
+
+  clean:
+    desc: "Clean up the Docker environment"
+    cmds:
+      - docker-compose down
+    silent: false
+
+  stress-test:
+    desc: "Full process: Set up, run stress test, and clean up"
+    cmds:
+      - task setup
+      - task run-test
+      - task clean
