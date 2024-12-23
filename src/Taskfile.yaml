@@ -12,7 +12,8 @@ tasks:
     deps:
       - setup
     cmds:
-      - node stress-test.js
+      - npm run build
+      - npm run start
     silent: false
 
   clean:
@@ -24,6 +25,6 @@ tasks:
   stress-test:
     desc: "Full process: Set up, run stress test, and clean up"
     cmds:
+      - task clean
       - task setup
       - task run-test
-      - task clean
