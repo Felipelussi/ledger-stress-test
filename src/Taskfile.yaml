@@ -8,12 +8,21 @@ tasks:
     silent: false
 
   run-test:
-    desc: "Run the stress test script using Node.js"
+    desc: "Run the stress test script iteratively using Node.js"
     deps:
       - setup
     cmds:
       - npm run build
-      - npm run start
+      - |
+        for i in $(seq 1 100); do
+          echo "Iteration $i"
+        
+          task clean
+        
+          task setup
+        
+          node ../dist/index.js $i
+        done
     silent: false
 
   clean:
@@ -23,8 +32,26 @@ tasks:
     silent: false
 
   stress-test:
-    desc: "Full process: Set up, run stress test, and clean up"
+    desc: "Full process: Clean up, set up, run stress test, and clean up again"
     cmds:
       - task clean
       - task setup
       - task run-test
+      - task clean
+
+
+#  formance:reset:
+#    internal: false
+#    cmds:
+#      - |
+#        docker exec postgres psql -U ledger -d postgres -c "DROP DATABASE IF EXISTS ledger;"
+#        docker exec postgres psql -U ledger -d postgres -c "CREATE DATABASE ledger;"
+#        docker cp dump-ledger.bin postgres:/tmp/mydb_dump.bin
+#        docker exec postgres pg_restore -U ledger -d ledger /tmp/mydb_dump.bin
+        
+#      - PGPASSWORD=pgadmin pg_dump -U postgres -h localhost -p 30004 k {{.WORKSPACE_PATH}}/tasks/test/seeds/formance/formance.full.dump formance-local-ledger
+
+
+
+
+

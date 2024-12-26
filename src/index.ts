@@ -1,7 +1,18 @@
 import axios from 'axios';
 import {generateNumscript} from "formance-numscript-generator/src/index.js";
 import {fakerPT_BR as faker} from "@faker-js/faker";
-import {NumscriptTransaction} from "./types.js";
+import {NumscriptTransaction} from "formance-numscript-generator/src/types.js";
+import fs from "fs/promises";
+import path from "path";
+import {fileURLToPath} from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const filePath = path.join(__dirname, 'results.csv')
+
+const args = process.argv.slice(2);
+const postingsAmount = Number(args[0]);
 
 const api = axios.create(
     {
@@ -14,10 +25,9 @@ api.post(`/`).then((res) => {
 })
 
 
-for (let i = 1; i <= 100; i++) {
     const transactions = [];
     const destination = `${faker.string.uuid()}:credit:${faker.string.uuid()}`
-    for (let j = 1; j <= i; j++) {
+    for (let j = 1; j <= postingsAmount; j++) {
         transactions.push({
             asset: "BRL/2",
             amount: faker.number.int({max: 1000}),
@@ -48,8 +58,9 @@ for (let i = 1; i <= 100; i++) {
         },
     }
     const startTime = performance.now();
-    createTransaction(transaction).then(r => console.log(`${i}                ${performance.now() - startTime}`))
-}
+    await createTransaction(transaction)
+    const endTime = performance.now();
+    await fs.appendFile(filePath, `${postingsAmount},${endTime - startTime}\n`)
 
 
 async function createTransaction(transaction) {
