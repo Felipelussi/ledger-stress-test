@@ -13,12 +13,9 @@ tasks:
       - setup
     cmds:
       - npm run build
-      - |
-        for i in $(seq 1 100); do
-          echo "Iteration $i"
-          task formance:reset        
-          node ../dist/index.js $i
-        done
+      - task clean
+      - task setup
+      -  node ../dist/index.js $i
     silent: true
 
   clean:
