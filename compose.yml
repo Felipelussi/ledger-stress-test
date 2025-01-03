@@ -5,7 +5,7 @@ networks:
 services:
   postgres:
     container_name: postgres
-    image: "postgres:13-alpine"
+    image: "postgres:17-alpine"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ledger"]
       interval: 10s
@@ -22,7 +22,7 @@ services:
       - ledger-test
 
   ledger:
-    image: "ghcr.io/formancehq/ledger:v2.0.2"
+    image: "ghcr.io/formancehq/ledger:latest"
     healthcheck:
       test: [ "CMD", "wget", "http://127.0.0.1:3068/_info", "-O", "-", "-q" ]
       interval: 10s
