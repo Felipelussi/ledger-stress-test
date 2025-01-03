@@ -13,9 +13,7 @@ tasks:
       - setup
     cmds:
       - npm run build
-      - task clean
-      - task setup
-      -  node ../dist/index.js $i
+      -  node ./dist/index.js $i
     silent: true
 
   clean:
@@ -31,7 +29,6 @@ tasks:
       - task setup
       - task run-test
       - task clean
-
 
   formance:reset:
     internal: false
