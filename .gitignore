@@ -3,6 +3,8 @@
 /.idea
 /dist
 
+.DS_Store
+
 /node_modules
 npm-debug.log*
 yarn-debug.log*

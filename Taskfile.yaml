@@ -1,25 +1,13 @@
 version: '3'
 
+dotenv: ['.env']
+
 tasks:
-  setup:
+  up:
     desc: "Set up the ledger environment with Docker Compose"
     cmds:
       - docker-compose up -d
     silent: false
-
-  run-test:
-    desc: "Run the stress test script iteratively using Node.js"
-    deps:
-      - setup
-    cmds:
-      - npm run build
-      - |
-        for i in $(seq 1 100); do
-          echo "Iteration $i"
-          task formance:reset        
-          node ./dist/index.js $i
-        done
-    silent: true
 
   clean:
     desc: "Clean up the Docker environment"
@@ -27,25 +15,49 @@ tasks:
       - docker-compose down
     silent: false
 
+  setup:
+    desc: "Setup initial data and backup sql"
+    cmds:
+      - task clean
+      - task up
+      - npm run build
+      - node ./dist/setup.js $ACCOUNTS $PREVIOUS_TRAN
+      - task formance:pg_dump
+
   stress-test:
     desc: "Full process: Clean up, set up, run stress test, and clean up again"
     cmds:
       - task clean
-      - task setup
+      - task up
       - task run-test
-      - task clean
 
+  run-test:
+    desc: "Run the stress test script iteratively using Node.js"
+    deps:
+      - up
+    cmds:
+      - npm run build
+      - |
+        task formance:reset        
+        node ./dist/index.js $LEDGER_VERSION $TYPE $ACCOUNTS $PREVIOUS_TRAN
+    silent: true
+
+  formance:pg_dump:
+    internal: false
+    cmds:
+      - mkdir -p dist/${LEDGER_VERSION}/db
+      - docker exec postgres pg_dump -U ledger ledger > dist/${LEDGER_VERSION}/db/mydb_dump_${ACCOUNTS}_${PREVIOUS_TRAN}.sql
+    silent: true
 
   formance:reset:
     internal: false
     cmds:
-      - docker cp ledger_bkp.dump postgres:/tmp/mydb_dump.bin &> /dev/null
+      - docker exec postgres psql -U ledger -d postgres -c "DROP DATABASE IF EXISTS ledger;" &> /dev/null 
+      - docker exec postgres psql -U ledger -d postgres -c "CREATE DATABASE ledger;" &> /dev/null
       - |
-        docker exec postgres psql -U ledger -d postgres -c "DROP DATABASE IF EXISTS ledger;" &> /dev/null 
-        docker exec postgres psql -U ledger -d postgres -c "CREATE DATABASE ledger;" &> /dev/null
-        docker exec postgres pg_restore -U ledger -d ledger -v /tmp/mydb_dump.bin &> /dev/null
+        docker cp dist/${LEDGER_VERSION}/db/mydb_dump_${ACCOUNTS}_${PREVIOUS_TRAN}.sql postgres:/tmp/mydb_dump_${ACCOUNTS}_${PREVIOUS_TRAN}.sql &> /dev/null
+        docker exec postgres psql -U ledger -d ledger -f /tmp/mydb_dump_${ACCOUNTS}_${PREVIOUS_TRAN}.sql &> /dev/null
     silent: true
-        
 
 
 
